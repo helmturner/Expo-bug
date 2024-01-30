@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "expo-router-pnpm-bug",
+    "slug": "expo-router-pnpm-bug",
+    "version": "0.0.1",
+    "scheme": "exp",
+    "ios": { "bundleIdentifier": "com.expo-router-pnpm-bug.app" },
+    "platforms": ["ios", "android"]
+  }
+}

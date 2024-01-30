@@ -1,81 +1,78 @@
-# Turborepo starter
+## Steps to reproduce
 
-This is an official starter Turborepo.
+1. Create a `pnpm` workspace with a subdirectory containing an Expo app
+2. Follow the [manual setup directions](https://docs.expo.dev/router/installation/#manual-installation) for `expo-router`
+3. Follow the [directions for setting up a monorepo](https://docs.expo.dev/guides/monorepos/) in the Expo documentation
+    - [Modify the Metro config](https://docs.expo.dev/guides/monorepos/#modify-the-metro-config):
+        ```js
+        // metro.config.js:
 
-## Using this example
+        const path = require("path");
+        const { getDefaultConfig } = require("expo/metro-config");
 
-Run the following command:
+        const projectRoot = __dirname;
+        const workspaceRoot = path.resolve(__dirname, "../..");
 
-```sh
-npx create-turbo@latest
-```
+        const config = getDefaultConfig(projectRoot);
 
-## What's inside?
+        config.watchFolders = [workspaceRoot],
 
-This Turborepo includes the following packages/apps:
+        config.resolver.nodeModulesPaths = [
+          path.resolve(projectRoot, "node_modules"),
+          path.resolve(workspaceRoot, "node_modules"),
+        ]
 
-### Apps and Packages
+        module.exports = config;
+        ```
+    - Prepend the `run` command with `EXPO_USE_METRO_WORKSPACE_ROOT=1` as described in [Change the default entrypoint](https://docs.expo.dev/guides/monorepos/#change-default-entrypoint)
+        ```json
+        // package.json:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+        {
+        /* ... */
+        "scripts": {
+            "ios": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:ios",
+            "android": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:android",
+            }
+        /* ... */
+        }
+        ```
+    - Add `node-linker=hoisted` to `.npmrc` at the root of the monorepo as described in [Can I use another Monorepo tool?](https://docs.expo.dev/guides/monorepos/#can-i-use-another-monorepo-tool-instead-of-yarn-workspaces)
+        ```ini
+        # .npmrc:
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+        node-linker=hoisted
+        ```
+4. Install `expo-dev-client` in the Expo app
+    ```sh
+    cd apps/expo
+    pnpm i expo-dev-client
+    ```
+5. run `pnpm i` in the monorepo root
+6. run either `pnpm ios` or `pnpm android` to create and launch a development build
+7. Open the debugger and observe the error
+8. Click any of the links in the error message to see the resolution error
 
-### Utilities
+## Expected behavior
 
-This Turborepo has some additional tools already setup for you:
+Source-maps (and by extension, the debugger) should just work.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Actual behavior
 
-### Build
+The debugger gets a 404 error when trying to load the source-map.
 
-To build all apps and packages, run the following command:
+## Workaround
 
-```
-cd my-turborepo
-pnpm build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+Recalling a fix for an older bug, I was able to work around the issue as follows:
+ - Create an `index.ts` file in the app's root directory (or `index.js`, etc)
+ - Add the following single line:
+    ```ts
+    import "expo-router/entry";
+    ```
+ - Update package.json#main to point to the new file
+    ```json
+    {
+    "main": "index.ts",
+    /* ... */
+    }
+    ```
