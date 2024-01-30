@@ -25,7 +25,7 @@
         module.exports = config;
         ```
     - Prepend the `run` command with `EXPO_USE_METRO_WORKSPACE_ROOT=1` as described in [Change the default entrypoint](https://docs.expo.dev/guides/monorepos/#change-default-entrypoint)
-        ```json
+        ```jsonc
         // package.json:
 
         {
@@ -61,6 +61,8 @@ Source-maps (and by extension, the debugger) should just work.
 
 The debugger gets a 404 error when trying to load the source-map.
 
+![](https://raw.githubusercontent.com/helmturner/Expo-bug/main/screenshots/actual.png)
+
 ## Workaround
 
 Recalling a fix for an older bug, I was able to work around the issue as follows:
@@ -70,7 +72,7 @@ Recalling a fix for an older bug, I was able to work around the issue as follows
     import "expo-router/entry";
     ```
  - Update package.json#main to point to the new file
-    ```json
+    ```jsonc
     {
     "main": "index.ts",
     /* ... */
